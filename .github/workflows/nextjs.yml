@@ -1,5 +1,3 @@
-
-
 name: Deploy Next.js VivekCSE site to Git Actions
 on:
   # Runs on pushes targeting the default branch
@@ -30,14 +28,36 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: 18.18.0 # Change to your desired Node.js version
-        uses: actions/cache@v3
+          node-version: 20.10.0 # Change to your desired Node.js version
+      - uses: pnpm/action-setup@v2
+        name: Install pnpm
         with:
-          ~/.pnpm-store
-          ${{ github.workspace }}/.next/cache
-          key: pnpm-store-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}-${{ hashFiles('**/*.js', '**/*.jsx', '**/*.ts', '**/*.tsx') }}
+          version: 8
+          run_install: false
+
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - uses: actions/cache@v3
+        name: Setup pnpm cache
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: |
-            pnpm-store-${{ runner.os }}-nextjs-${{ hashFiles('**/pnpm-lock.yaml') }}-
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm install
+
+        # uses: actions/cache@v3
+        # with:
+        #   ~/.pnpm-store
+        #   ${{ github.workspace }}/.next/cache
+        #   key: pnpm-store-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}-${{ hashFiles('**/*.js', '**/*.jsx', '**/*.ts', '**/*.tsx') }}
+        #   restore-keys: |
+        #     pnpm-store-${{ runner.os }}-nextjs-${{ hashFiles('**/pnpm-lock.yaml') }}-
       # - name: Cache dependencies
       #   uses: actions/cache@v3
       #   with:
@@ -45,11 +65,11 @@ jobs:
       #     key: pnpm-store-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}
       #     restore-keys: |
       #       pnpm-store-${{ runner.os }}-
-      - name: Install PNPM
-        run: |
-          npm install -g pnpm@latest
-      - name: Install dependencies
-        run: pnpm install
+      # - name: Install PNPM
+      #   run: |
+      #     npm install -g pnpm@latest
+      # - name: Install dependencies
+      #   run: pnpm install
 
       - name: Build Next.js
         run: pnpm run build
@@ -73,7 +93,6 @@ jobs:
         uses: actions/deploy-pages@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GH_PAT }}
-
 # uses: actions/cache@v3
 # with:
 #     ~/.pnpm-store
@@ -82,11 +101,10 @@ jobs:
 #   restore-keys: |
 #     pnpm-store-${{ runner.os }}-nextjs-${{ hashFiles('**/pnpm-lock.yaml') }}-
 
-
-      # - name: Cache dependencies
-      #   uses: actions/cache@v3
-      #   with:
-      #     path: ~/.pnpm-store
-      #     key: pnpm-store-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}
-      #     restore-keys: |
-      #       pnpm-store-${{ runner.os }}-
+# - name: Cache dependencies
+#   uses: actions/cache@v3
+#   with:
+#     path: ~/.pnpm-store
+#     key: pnpm-store-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}
+#     restore-keys: |
+#       pnpm-store-${{ runner.os }}-
